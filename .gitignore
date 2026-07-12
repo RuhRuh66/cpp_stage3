@@ -1,0 +1,19 @@
+# cmake build directories
+build/
+cmake_build/
+*/build/
+*/cmake_build/
+
+
+object files / executables
+*.o
+*.
+
+#vscode local settings
+
+.vscode/
+
+#OS files
+.DS_Store
+Thums.db
+
