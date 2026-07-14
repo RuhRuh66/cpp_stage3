@@ -17,11 +17,41 @@ std::size_t save_to_data(
     return total_size;
 }
 
+class CurlEasy{
+private:
+    CURL* handle_;
+public:
+    CurlEasy():handle_(curl_easy_init()) {};
+
+    ~CurlEasy() {
+        if (handle_!= nullptr) {
+            curl_easy_cleanup(handle_);
+        }
+    }
+
+    bool is_ok() const {
+        return handle_ != nullptr;
+    }
+
+    CURL* get() const {
+        return handle_;
+
+    }
+
+    CurlEasy(const CurlEasy&) = delete;
+    CurlEasy& operator=(const CurlEasy&) = delete;
+
+};
+
+
+
 CURLcode http_get(const std::string& url, long& status_code, std::string& data) {
     status_code = 0;
     data.clear();
 
-    CURL* handle = curl_easy_init();
+    CurlEasy easy;
+    CURL* handle = easy.get();
+
     if (handle == nullptr){
         return CURLE_FAILED_INIT;
     }
@@ -41,8 +71,6 @@ CURLcode http_get(const std::string& url, long& status_code, std::string& data) 
     if (result == CURLE_OK) {
         result = curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &status_code);
     }
-
-    curl_easy_cleanup(handle);
 
     return result;
 }
