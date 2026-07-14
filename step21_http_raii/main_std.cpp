@@ -15,20 +15,51 @@ std::size_t save_to_data(
 {
     const std::size_t total_size = size * nmemb;
 
-    auto* data = static_cast<std::string*>(userdata);
-    data->append(ptr, total_size);
+    auto* body = static_cast<std::string*>(userdata);
+    body->append(ptr, total_size);
 
     return total_size;
 }
 
-CURLcode http_get(
+class CurlGlobal {
+public:
+    CurlGlobal()
+        : result_(curl_global_init(CURL_GLOBAL_DEFAULT))
+    {
+    }
+
+    ~CurlGlobal()
+    {
+        if (result_ == CURLE_OK) {
+            curl_global_cleanup();
+        }
+    }
+
+    bool ok() const
+    {
+        return result_ == CURLE_OK;
+    }
+
+    CURLcode result() const
+    {
+        return result_;
+    }
+
+    CurlGlobal(const CurlGlobal&) = delete;
+    CurlGlobal& operator=(const CurlGlobal&) = delete;
+
+private:
+    CURLcode result_;
+};
+
+CURLcode get_http(
     const std::string& url,
-    std::string& body,
-    long& status_code
+    long& status_code,
+    std::string& body
 )
 {
-    body.clear();
     status_code = 0;
+    body.clear();
 
     CURL* handle = curl_easy_init();
 
@@ -79,43 +110,38 @@ CURLcode http_get(
 
 int main()
 {
-    CURLcode global_result = curl_global_init(CURL_GLOBAL_DEFAULT);
+    CurlGlobal curl_global;
 
-    if (global_result != CURLE_OK) {
-        std::cerr << "curl_global_init failed\n";
+    if (!curl_global.ok()) {
+        std::cerr << "curl_global_init failed: "
+                  << curl_easy_strerror(curl_global.result())
+                  << '\n';
         return 1;
     }
 
-    std::string body;
     long status_code = 0;
+    std::string body;
+    std::string url = "https://jsonplaceholder.typicode.com/posts/1";
 
-    CURLcode result = http_get(
-        "https://jsonplaceholder.typicode.com/posts/1",
-        body,
-        status_code
-    );
+    CURLcode result = get_http(url, status_code, body);
 
     if (result != CURLE_OK) {
         std::cerr << "curl failed: "
                   << curl_easy_strerror(result)
                   << '\n';
-
-        curl_global_cleanup();
         return 1;
     }
 
-    nlohmann::json json_data = nlohmann::json::parse(body);
+    nlohmann::json result_json = nlohmann::json::parse(body);
 
     std::cout << "HTTP status: " << status_code << '\n';
     std::cout << "received: " << body.size() << " bytes\n";
     std::cout << "id: "
-              << json_data["id"].get<int>()
+              << result_json["id"].get<int>()
               << '\n';
     std::cout << "title: "
-              << json_data["title"].get<std::string>()
+              << result_json["title"].get<std::string>()
               << '\n';
-
-    curl_global_cleanup();
 
     return 0;
 }
