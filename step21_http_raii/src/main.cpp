@@ -128,8 +128,11 @@ int main() {
     nlohmann::json json_data = nlohmann::json::parse(response.body);
     std::cout << "HTTP status: " << response.status_code << '\n';
     std::cout << "received: " << response.body.size() << " bytes\n";
-    std::cout << "id: " << json_data["id"].get<int>() << '\n';
-    std::cout << "title: " << json_data["title"].get<std::string>() << '\n';
+    
+    if (!json_data.is_array()) {
+        std::cerr << "JSON is not an array\n";
+        return 1;
+    }
     
     return 0;
 
