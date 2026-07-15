@@ -5,6 +5,11 @@
 
 namespace {
 
+struct HttpResponse {
+    long status_code = 0;
+    std::string body;
+};
+
 std::size_t save_to_data(
     char* ptr,
     size_t size,
@@ -45,9 +50,9 @@ public:
 
 
 
-CURLcode http_get(const std::string& url, long& status_code, std::string& data) {
-    status_code = 0;
-    data.clear();
+CURLcode http_get(const std::string& url, HttpResponse& response) {
+    response.status_code = 0;
+    response.body.clear();
 
     CurlEasy easy;
     CURL* handle = easy.get();
@@ -62,14 +67,14 @@ CURLcode http_get(const std::string& url, long& status_code, std::string& data) 
         result = curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, save_to_data);
     }
     if (result == CURLE_OK) {
-        result = curl_easy_setopt(handle, CURLOPT_WRITEDATA, &data);
+        result = curl_easy_setopt(handle, CURLOPT_WRITEDATA, &response.body);
     }
     if (result == CURLE_OK) {
         result = curl_easy_perform(handle);
     }
 
     if (result == CURLE_OK) {
-        result = curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &status_code);
+        result = curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &response.status_code);
     }
 
     return result;
@@ -110,19 +115,19 @@ int main() {
         std::cerr << "curl_global_init failed: " << curl_easy_strerror(curl_global.result()) << '\n';
         return 1;
     }
-    long status_code = 0;
-    std::string body;
+ 
     std::string url = "https://jsonplaceholder.typicode.com/posts/1";
+    HttpResponse response;
 
-    CURLcode result = http_get(url, status_code, body);
+    CURLcode result = http_get(url, response);
     if (result != CURLE_OK) {
         std::cerr << "curl failed: " << curl_easy_strerror(result) << '\n';
         return 1;
     }
 
-    nlohmann::json json_data = nlohmann::json::parse(body);
-    std::cout << "HTTP status: " << status_code << '\n';
-    std::cout << "received: " << body.size() << " bytes\n";
+    nlohmann::json json_data = nlohmann::json::parse(response.body);
+    std::cout << "HTTP status: " << response.status_code << '\n';
+    std::cout << "received: " << response.body.size() << " bytes\n";
     std::cout << "id: " << json_data["id"].get<int>() << '\n';
     std::cout << "title: " << json_data["title"].get<std::string>() << '\n';
     
