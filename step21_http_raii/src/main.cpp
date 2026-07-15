@@ -135,6 +135,12 @@ int main() {
     
     std::cout << "post count: " << json_data.size() << '\n';
 
+    for (int i = 0; i < 3 && i < json_data.size(); ++i) {
+        const nlohmann::json & post = json_data[i];
+        std::cout << "id: " << post["id"].get<int>() << '\n';
+        std::cout << "title: " << post["title"].get<std::string>() << '\n';
+
+    }
     
 
     
