@@ -116,7 +116,7 @@ int main() {
         return 1;
     }
  
-    std::string url = "https://jsonplaceholder.typicode.com/posts/1";
+    std::string url = "https://jsonplaceholder.typicode.com/posts";
     HttpResponse response;
 
     CURLcode result = http_get(url, response);
@@ -126,13 +126,17 @@ int main() {
     }
 
     nlohmann::json json_data = nlohmann::json::parse(response.body);
-    std::cout << "HTTP status: " << response.status_code << '\n';
-    std::cout << "received: " << response.body.size() << " bytes\n";
-    
     if (!json_data.is_array()) {
         std::cerr << "JSON is not an array\n";
         return 1;
     }
+    std::cout << "HTTP status: " << response.status_code << '\n';
+    std::cout << "received: " << response.body.size() << " bytes\n";
+    
+    std::cout << "post count: " << json_data.size() << '\n';
+
+    
+
     
     return 0;
 
