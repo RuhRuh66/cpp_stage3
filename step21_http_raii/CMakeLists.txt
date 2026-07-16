@@ -10,7 +10,9 @@ find_package(CURL REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
 add_executable(curl_basic
-    src/main.cpp)
+    src/main.cpp src/HttpClient.cpp)
 
 target_link_libraries(curl_basic PRIVATE CURL::libcurl)
 target_link_libraries(curl_basic PRIVATE nlohmann_json::nlohmann_json)
+
+target_include_directories(curl_basic PRIVATE include)
