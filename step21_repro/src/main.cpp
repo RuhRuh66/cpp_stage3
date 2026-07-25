@@ -34,15 +34,45 @@ std::vector<Post> parse_posts(const std::string& json_text) {
     return posts;
 }
 
+bool print_user_posts(
+    const std::vector<User>& users,
+    const std::vector<Post>& posts,
+    int target_user_id    
+) {
+    for (const User& user: users) {
+        if (user.id != target_user_id) {
+            continue;
+        }
+        std::cout << "user: " << user.name << '\n';
+        std::cout << "email: " << user.email << '\n';
+        std::cout << "posts:\n";
+
+        std::size_t post_count = 0;
+
+        for (const Post& post: posts) {
+            if (post.user_id != user.id) continue;
+
+            std::cout << post.id << ": " << post.title << '\n';
+            ++ post_count;
+        }
+
+        std::cout << "post count: " << post_count << '\n';
+
+        return true;
+    }
+    return false;
+}
+
 }
 
 int main() {
     HttpResponse user_response;
     HttpResponse posts_response;
+    int target_user_id = 1;
 
     std::string user_url = "https://jsonplaceholder.typicode.com/users";
 
-    std::string posts_url = "https://jsonplaceholder.typicode.com/posts?userId=1";
+    std::string posts_url = "https://jsonplaceholder.typicode.com/posts?userId=" + std::to_string(target_user_id);
 
     CURLcode result = Http_get(user_url, user_response);
     if (result != CURLE_OK){
@@ -62,39 +92,10 @@ int main() {
 
  
 
-  std::cout << '\n';
-
-  int target_user_id = 1;
-  bool target_found = false;
-
-  for (const User& user: users){
-    if (user.id != target_user_id){
-        continue;
+    if (!print_user_posts(users, posts, target_user_id)) {
+        std::cerr << "user not found\n";
+        return 1;
     }
 
-    target_found = true;
-
-    std::cout << "user: " << user.name << '\n';
-    std::cout << "email: " << user.email << '\n';
-    std::cout << "posts:\n";
-
-    std::size_t post_count = 0;
-
-    for (const Post& post: posts) {
-        if (post.user_id == user.id) {
-            std::cout << post.id << ": " << post.title << '\n';
-        }
-        ++post_count;
-    }
-
-    std::cout << "post count: " << post_count << '\n';
-    break;
-
-  
-  if (!target_found) {
-    std::cerr << "user not found\n";
-    return 1;
-  }
-}
     return 0;
 }

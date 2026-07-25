@@ -64,6 +64,10 @@ public:
 
 
 CURLcode Http_get(const std::string& url, HttpResponse& response){
+
+    response.status_code = 0;
+    response.data.clear();
+
     static CurlGlobal global;
     if (!global.is_ok()) {
         return CURLE_FAILED_INIT;
@@ -75,8 +79,6 @@ CURLcode Http_get(const std::string& url, HttpResponse& response){
     }
 
     CURL* handle = easy.get();
-    response.status_code = 0;
-    response.data.clear();
 
     CURLcode result = curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
     if (result == CURLE_OK) {
