@@ -1,6 +1,6 @@
 #include "HttpClient.hpp"
-#include <curl/curl.h>
-#include <curl/easy.h>
+
+
 
 namespace {
 
@@ -40,9 +40,33 @@ public:
 
 };
 
+class CurlGlobal{
+private:
+    CURLcode initialized_;
+
+public:
+    CurlGlobal(): initialized_(curl_global_init(CURL_GLOBAL_DEFAULT)){};
+    ~CurlGlobal(){
+        if (initialized_ == CURLE_OK) {
+            curl_global_cleanup();
+        }
+    }
+
+    bool is_ok() const {
+        return initialized_== CURLE_OK;
+    }
+    CurlGlobal(const CurlGlobal&) = delete;
+    CurlGlobal& operator=(const CurlGlobal&) = delete;
+};
+
 }
 
 CURLcode http_get(const std::string& url, HttpResponse& response) {
+    static CurlGlobal global;
+    if (!global.is_ok()){
+        return CURLE_FAILED_INIT;
+    }
+
     response.status_code = 0;
     response.body.clear();
 

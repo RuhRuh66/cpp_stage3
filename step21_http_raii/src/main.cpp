@@ -8,45 +8,11 @@
 
 
 
-namespace {
-
-
-
-class CurlGlobal{
-private:
-    CURLcode result_;
-
-public:
-    CurlGlobal(): result_(curl_global_init(CURL_GLOBAL_DEFAULT)){};
-
-    ~CurlGlobal(){
-        if (result_ == CURLE_OK){
-            curl_global_cleanup();
-        }
-    }
-
-    bool is_ok() const {
-        return result_ == CURLE_OK;
-    }
-
-    CURLcode result() const {
-        return result_;
-    }
-
-    CurlGlobal(const CurlGlobal&) = delete;
-    CurlGlobal& operator=(const CurlGlobal&) = delete;
-
-};
-
-}
 
 int main() {
-    CurlGlobal curl_global;
 
-    if (!curl_global.is_ok()){
-        std::cerr << "curl_global_init failed: " << curl_easy_strerror(curl_global.result()) << '\n';
-        return 1;
-    }
+
+
  
     std::string url = "https://jsonplaceholder.typicode.com/posts";
     HttpResponse response;
